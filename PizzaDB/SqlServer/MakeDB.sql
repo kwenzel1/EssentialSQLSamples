@@ -97,12 +97,26 @@ create table CustomerOrderItem
     constraint pkCustomerOrderItemId primary key (CustomerOrderItemID),
     constraint fkCustomerOrderItemCustomerOrderID foreign key (CustomerOrderID) references CustomerOrder (CustomerOrderID),
     constraint fkCustomerOrderItemProductID foreign key (ProductID) references Product (ProductID)
-)
+);
+go
 
 
----------------------------------------------------------
--- Insert Sample Data
----------------------------------------------------------
+create view CustomerOrderSummary
+as
+select o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName, 
+   Sum(i.Quantity * p.Price) OrderPrice,
+   cast(Sum(i.Quantity * p.Price) * coalesce(cp.PercentDiscount ,0) / 100.0 as decimal(14,2)) DiscountAmount,
+   cast(Sum(i.Quantity * p.Price) * (1.00 - (coalesce(cp.PercentDiscount ,0) / 100.0)) as decimal(14,2)) FinalOrderPrice
+from CustomerOrder o
+    inner join Customer c on o.CustomerID = c.CustomerID
+    inner join CustomerOrderItem i on o.CustomerOrderID = i.CustomerOrderID
+    inner join Product p on i.ProductID = p.ProductID
+    left  join Coupon cp on o.CouponID = cp.CouponID
+group by o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName, cp.PercentDiscount;
+go
+
+
+
 ---------------------------------------------------------
 -- Insert Sample Data
 ---------------------------------------------------------
@@ -135,8 +149,8 @@ insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, C
 insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (16, null, null, 'Laszio', null, null, null, null);
 
 
-insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (1, '15P', '15% off order', 50, '2022-03-31');
-insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (2, '10P', '10% off order', 25, '2022-03-15');
+insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (1, '15P', '15% off order', 15, '2022-03-31');
+insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (2, '10P', '10% off order', 10, '2022-03-15');
 
 
 insert into Product (ProductID, ProductName, ProductType, Price) values (1 ,'Smelt Pizza','P',10.99);
