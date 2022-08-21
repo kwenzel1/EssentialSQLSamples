@@ -24,19 +24,32 @@ create table public.Store
    constraint pkStoreID primary key (StoreID),
    constraint ukStoreName unique (StoreName)
 );
+create index idxStore on Store(StoreID);
 
 
 create table public.Employee
 (
    EmployeeID int not null,
-   StoreID int not null,
    FirstName varchar(20) not null,
    LastName varchar(20) not null,
+   constraint pkEmployeeID primary key (EmployeeID)
+);
+create index idxEmployee on Employee(EmployeeID);
+
+
+create table public.EmployeeHistory
+(
+   EmployeeHistoryID int not null,
+   EmployeeID int not null,
+   StoreID int null,
    StartDate date not null,
    TerminationDate date null,
-   constraint pkEmployeeID primary key (EmployeeID),
-   constraint fkEmployeeStoreID foreign key (StoreID) references Store (StoreID)
+   constraint pkEmployeeHistoryID primary key (EmployeeHistoryID),
+   constraint fkEmployeeHistoryEmployeeID foreign key (EmployeeID) references Employee (EmployeeID),   
+   constraint fkEmployeeHistoryStoreID foreign key (StoreID) references Store (StoreID)
 );
+create index idxEmployeeHistory on EmployeeHistory(EmployeeHistoryID);
+
 
 
 create table public.Customer
@@ -51,6 +64,8 @@ create table public.Customer
     PostalCode Varchar(15),
     constraint pkCustomerID primary key (CustomerID)
 );
+create index idxCustomer on Customer(CustomerID);
+
 
 
 create table public.Coupon
@@ -62,6 +77,7 @@ create table public.Coupon
     ExpirationDate date not null,
     constraint pkCouponID primary key (CouponID)
 );
+create index idxCoupon on Coupon(CouponID);
 
 
 create table public.Product
@@ -73,6 +89,7 @@ create table public.Product
     constraint pkProductID primary key (ProductID),
     constraint ukProductName unique (ProductName)
 );
+create index idxProduct on Product(ProductID);
 
 
 create table public.CustomerOrder
@@ -87,6 +104,7 @@ create table public.CustomerOrder
     constraint fkCustomerOrderOrderTakerID foreign key (OrderTakerID) references Employee (EmployeeID),
     constraint fkCouponID foreign key (CouponID) references Coupon (CouponID)
 );
+create index idxCustomerOrder on CustomerOrder(CustomerOrderID);
 
 
 create table public.CustomerOrderItem
@@ -100,6 +118,7 @@ create table public.CustomerOrderItem
     constraint fkCustomerOrderItemCustomerOrderID foreign key (CustomerOrderID) references CustomerOrder (CustomerOrderID),
     constraint fkCustomerOrderItemProductID foreign key (ProductID) references Product (ProductID)
 );
+create index idxCustomerOrderItem on CustomerOrderItem(CustomerOrderItemID);
 
 
 create view public.CustomerOrderSummary
@@ -123,11 +142,19 @@ insert into Store ( StoreID, StoreName) values (1, 'Main Street');
 insert into Store ( StoreID, StoreName) values (2, 'West Side');
 
 
-insert into Employee (EmployeeID,  StoreID, FirstName, LastName, StartDate, TerminationDate) values (1,1, 'Noah', 'Washington', '2019-02-03', null);
-insert into Employee (EmployeeID,  StoreID, FirstName, LastName, StartDate, TerminationDate) values (2,2, 'Brandy', 'Saunders', '2019-02-03', null);
-insert into Employee (EmployeeID,  StoreID, FirstName, LastName, StartDate, TerminationDate) values (3,1, 'Ciam', 'Sawyer', '2019-02-03', '2020-03-03');
-insert into Employee (EmployeeID,  StoreID, FirstName, LastName, StartDate, TerminationDate) values (4,2, 'Ivan', 'Sara', '2019-08-02', null);
-insert into Employee (EmployeeID,  StoreID, FirstName, LastName, StartDate, TerminationDate) values (5,1, 'Chad', 'Tedford', '2020-01-29', null);
+insert into Employee (EmployeeID, FirstName, LastName) values (1, 'Noah',   'Washington');
+insert into Employee (EmployeeID, FirstName, LastName) values (2, 'Brandy', 'Saunders');
+insert into Employee (EmployeeID, FirstName, LastName) values (3, 'Ciam',   'Sawyer');
+insert into Employee (EmployeeID, FirstName, LastName) values (4, 'Ivan',   'Sara');
+insert into Employee (EmployeeID, FirstName, LastName) values (5, 'Chad',   'Tedford');
+
+
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (1, 1,1, '2018-05-03', '2018-08-31');
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (2, 1,1, '2019-02-03', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (3, 2,2, '2019-02-03', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (4, 3,1, '2019-02-03', '2020-03-03');
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (5, 4,2, '2019-08-02', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (6, 5,1, '2020-01-29', null);
 
 
 insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (1, '249-124-4223', 'duffy@coolmail.com', 'Duffy', '120 Magnolia', 'Plainwill', 'MI', '49000');
