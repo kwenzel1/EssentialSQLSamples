@@ -8,4 +8,4 @@ Samples are provided for MySQL, MS SQL Server, and PostgreSQL
 
 
 (c) 2022 [EssentialSQL](https://www.essentialsql.com/)
-You are free to use, but not modify, the sample db for your studies and in your website as long as you reference www.essentialsql.com.
+You are free to use, the sample db for your studies and in your website as long as you reference https://www.essentialsql.com/.
