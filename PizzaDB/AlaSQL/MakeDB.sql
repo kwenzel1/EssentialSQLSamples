@@ -105,6 +105,30 @@ create table CustomerOrderItem
 );
 create index idxCustomerOrderItem on CustomerOrderItem(CustomerOrderItemID);
 
+
+create view CustomerOrderSummary
+as
+select o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName, 
+   round(Sum(i.Quantity * p.Price), 2) OrderPrice,
+   round(Sum(i.Quantity * p.Price) * coalesce(cp.PercentDiscount ,0) / 100.0, 2) DiscountAmount,
+   round(Sum(i.Quantity * p.Price) * (1.00 - (coalesce(cp.PercentDiscount ,0) / 100.0)), 2) FinalOrderPrice
+from CustomerOrder o
+    inner join Customer c on o.CustomerID = c.CustomerID
+    inner join CustomerOrderItem i on o.CustomerOrderID = i.CustomerOrderID
+    inner join Product p on i.ProductID = p.ProductID
+    left  join Coupon cp on o.CouponID = cp.CouponID
+group by o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName, cp.PercentDiscount;
+
+
+create view EmployeeDetail
+as
+select h.EmployeeHistoryID, e.EmployeeID, s.ShopName, e.FirstName, e.LastName, h.StartDate, h.TerminationDate,
+    case when TerminationDate is null then 1 else 0 end IsActive
+from Employee e
+    inner join EmployeeHistory h on e.EmployeeID = h.EmployeeID
+    inner join Shop s on h.ShopId = s.ShopID
+
+
 ---------------------------------------------------------
 -- Insert Sample Data
 ---------------------------------------------------------
