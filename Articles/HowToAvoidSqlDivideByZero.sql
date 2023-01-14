@@ -20,15 +20,6 @@ select 10 s, 1 t union all
 select 120 s, 20 t
 
 
-
-
-
-
-
-
-
-
-
 --throw error!
 --velocity = s / t
 
@@ -57,9 +48,6 @@ from (
     select 10 s, 1 t union all
     select 120 s, 20 t
 ) d
-
-
-
 
 
 
