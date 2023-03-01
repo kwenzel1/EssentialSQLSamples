@@ -12,19 +12,17 @@ CREATE DATABASE PizzaDB;
 use PizzaDB;
 
 
-
 ---------------------------------------------------------
--- Build Tables
+-- Build Tables for Udemy Exercises
 ---------------------------------------------------------
-
-create table Store
+create table Shop
 (
-   StoreID int not null,
-   StoreName varchar(20) not null,
-   constraint pkStoreID primary key (StoreID),
-   constraint ukStoreName unique (StoreName)
+   ShopID int not null,
+   ShopName varchar(20) not null,
+   constraint pkShopID primary key (ShopID),
+   constraint ukShopName unique (ShopName)
 );
-create index idxStore on Store(StoreID);
+create index idxShop on Shop(ShopID);
 
 
 create table Employee
@@ -41,12 +39,12 @@ create table EmployeeHistory
 (
    EmployeeHistoryID int not null,
    EmployeeID int not null,
-   StoreID int null,
+   ShopID int null,
    StartDate date not null,
    TerminationDate date null,
    constraint pkEmployeeHistoryID primary key (EmployeeHistoryID),
    constraint fkEmployeeHistoryEmployeeID foreign key (EmployeeID) references Employee (EmployeeID),   
-   constraint fkEmployeeHistoryStoreID foreign key (StoreID) references Store (StoreID)
+   constraint fkEmployeeHistoryShopID foreign key (ShopID) references Shop (ShopID)
 );
 create index idxEmployeeHistory on EmployeeHistory(EmployeeHistoryID);
 
@@ -83,7 +81,7 @@ create table Product
     ProductID int not null,
     ProductName varchar(20) not null,
     ProductType varchar(5) not null,
-    Price numeric(14,2) not null,
+    Price decimal(12,2) not null,
     constraint pkProductID primary key (ProductID),
     constraint ukProductName unique (ProductName)
 );
@@ -118,13 +116,21 @@ create table CustomerOrderItem
 );
 create index idxCustomerOrderItem on CustomerOrderItem(CustomerOrderItemID);
 
+create  view CustomerOrderDetail
+as
+select o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName CustomerName,
+    p.ProductName, p.Price, i.Quantity, i.Quantity * p.Price PurchaseAmount
+from CustomerOrder o
+    inner join Customer c on o.CustomerID = c.CustomerID
+    inner join CustomerOrderItem i on  o.CustomerOrderID = i.CustomerOrderID
+    inner join Product p on i.ProductID = p.ProductID;
 
 create view CustomerOrderSummary
 as
 select o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName, 
    Sum(i.Quantity * p.Price) OrderPrice,
-   cast(Sum(i.Quantity * p.Price) * coalesce(cp.PercentDiscount ,0) / 100.0 as decimal(14,2)) DiscountAmount,
-   cast(Sum(i.Quantity * p.Price) * (1.00 - (coalesce(cp.PercentDiscount ,0) / 100.0)) as decimal(14,2)) FinalOrderPrice
+   Sum(i.Quantity * p.Price) * coalesce(cp.PercentDiscount ,0) / 100.0 DiscountAmount,
+   Sum(i.Quantity * p.Price) * (1.00 - (coalesce(cp.PercentDiscount ,0) / 100.0)) FinalOrderPrice
 from CustomerOrder o
     inner join Customer c on o.CustomerID = c.CustomerID
     inner join CustomerOrderItem i on o.CustomerOrderID = i.CustomerOrderID
@@ -132,11 +138,27 @@ from CustomerOrder o
     left  join Coupon cp on o.CouponID = cp.CouponID
 group by o.CustomerOrderID, o.OrderDate, c.CustomerID, c.LastName, cp.PercentDiscount;
 
+create view DailySalesSummary
+as
+select OrderDate, Sum(FinalOrderPrice) DailySales
+from CustomerOrderSummary
+group by OrderDate;
+
+
+create view EmployeeDetail
+as
+select h.EmployeeHistoryID, e.EmployeeID, s.ShopName, e.FirstName, e.LastName, h.StartDate, h.TerminationDate,
+    case when TerminationDate is null then 1 else 0 end IsActive
+from Employee e
+    inner join EmployeeHistory h on e.EmployeeID = h.EmployeeID
+    inner join Shop s on h.ShopId = s.ShopID;
+
+
 ---------------------------------------------------------
 -- Insert Sample Data
 ---------------------------------------------------------
-insert into Store ( StoreID, StoreName) values (1, 'Main Street');
-insert into Store ( StoreID, StoreName) values (2, 'West Side');
+insert into Shop ( ShopID, ShopName) values (1, 'Main Street');
+insert into Shop ( ShopID, ShopName) values (2, 'West Side');
 
 
 insert into Employee (EmployeeID, FirstName, LastName) values (1, 'Noah',   'Washington');
@@ -146,12 +168,12 @@ insert into Employee (EmployeeID, FirstName, LastName) values (4, 'Ivan',   'Sar
 insert into Employee (EmployeeID, FirstName, LastName) values (5, 'Chad',   'Tedford');
 
 
-insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (1, 1,1, '2018-05-03', '2018-08-31');
-insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (2, 1,1, '2019-02-03', null);
-insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (3, 2,2, '2019-02-03', null);
-insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (4, 3,1, '2019-02-03', '2020-03-03');
-insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (5, 4,2, '2019-08-02', null);
-insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, StoreID, StartDate, TerminationDate) values (6, 5,1, '2020-01-29', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, ShopID, StartDate, TerminationDate) values (1, 1,1, '2018-05-03', '2018-08-31');
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, ShopID, StartDate, TerminationDate) values (2, 1,1, '2019-02-03', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, ShopID, StartDate, TerminationDate) values (3, 2,2, '2019-02-03', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, ShopID, StartDate, TerminationDate) values (4, 3,1, '2019-02-03', '2020-03-03');
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, ShopID, StartDate, TerminationDate) values (5, 4,2, '2019-08-02', null);
+insert into EmployeeHistory (EmployeeHistoryID,  EmployeeID, ShopID, StartDate, TerminationDate) values (6, 5,1, '2020-01-29', null);
 
 
 insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (1, '249-124-4223', 'duffy@coolmail.com', 'Duffy', '120 Magnolia', 'Plainwill', 'MI', '49000');
@@ -174,6 +196,7 @@ insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, C
 
 insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (1, '15P', '15% off order', 15, '2022-03-31');
 insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (2, '10P', '10% off order', 10, '2022-03-15');
+insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (3, '10PS', '10% off order', 10, '2022-05-15');
 
 
 insert into Product (ProductID, ProductName, ProductType, Price) values (1 ,'Smelt Pizza','P',10.99);
@@ -564,4 +587,4 @@ insert into CustomerOrderItem (CustomerOrderItemID, CustomerOrderID, ProductID, 
 insert into CustomerOrderItem (CustomerOrderItemID, CustomerOrderID, ProductID, Quantity, SpecialInstructions) values(280,92,2,1,null);
 insert into CustomerOrderItem (CustomerOrderItemID, CustomerOrderID, ProductID, Quantity, SpecialInstructions) values(281,92,10,1,null);
 insert into CustomerOrderItem (CustomerOrderItemID, CustomerOrderID, ProductID, Quantity, SpecialInstructions) values(282,92,9,1,null);
-commit;
+
