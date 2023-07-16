@@ -269,3 +269,59 @@ VALUES
 
 
 
+-----------------------------------------------------------
+-- For teaching Joins
+-- Create Course table
+-- Create Course table
+CREATE TABLE Course (
+    CourseName VARCHAR(50),
+    Semester VARCHAR(50),
+    Department VARCHAR(50),
+    Instructor VARCHAR(50),
+    CreditHours INT
+);
+
+-- Populate Course table
+INSERT INTO Course (CourseName, Semester, Department, Instructor, CreditHours)
+VALUES
+    ('Algebra', 'Fall', 'Math', 'John Smith', 3),
+    ('Geometry', 'Fall', 'Math', 'Jane Doe', 3),
+    ('Biology', 'Fall', 'Science', 'Sarah Johnson', 4),
+    ('Chemistry', 'Fall', 'Science', 'Michael Brown', 4),
+    ('History', 'Fall', 'Social Studies', 'Emily Wilson', 3),
+    ('Art', 'Fall', 'Fine Arts', 'Laura Anderson', 2),
+    ('Drafting', 'Fall', 'Fine Arts', 'David Miller', 3),
+    ('Music', 'Fall', 'Fine Arts', 'Robert Taylor', 2),
+    ('Algebra', 'Spring', 'Math', 'John Smith', 3),
+    ('Geometry', 'Spring', 'Math', 'Jane Doe', 3),
+    ('Biology', 'Spring', 'Science', 'Sarah Johnson', 4),
+    ('Chemistry', 'Spring', 'Science', 'Michael Brown', 4),
+    ('History', 'Spring', 'Social Studies', 'Emily Wilson', 3),
+    ('Art', 'Spring', 'Fine Arts', 'Laura Anderson', 2),
+    ('Drafting', 'Spring', 'Fine Arts', 'David Miller', 3),
+    ('Music', 'Spring', 'Fine Arts', 'Robert Taylor', 2);
+
+-- Create Student table
+CREATE TABLE Schedule (
+    CourseName VARCHAR(50),
+    Semester VARCHAR(50),
+    StudentName VARCHAR(50)
+);
+
+-- Populate Student table
+INSERT INTO Schedule (CourseName, Semester, StudentName)
+VALUES
+    ('Algebra', 'Fall', 'Bob'),
+    ('Geometry', 'Fall', 'Bob'),
+    ('Biology', 'Fall', 'Sally'),
+    ('Chemistry', 'Fall', 'Sally'),
+    ('History', 'Fall', 'Sally'),
+    ('Algebra', 'Spring', 'Omar'),
+    ('Geometry', 'Spring', 'Omar'),
+    ('Biology', 'Spring', 'Fleur'),
+    ('Chemistry', 'Spring', 'Fleur'),
+    ('History', 'Spring', 'Fleur'),
+    ('Art', 'Fall', 'Sally'),
+    ('Music', 'Spring', 'Sally'),
+    ('Art', 'Spring', 'Fleur'),
+    ('Music', 'Fall', 'Fleur');

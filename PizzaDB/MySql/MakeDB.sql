@@ -192,6 +192,7 @@ insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, C
 insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (14, null, null, 'McArthur', null, null, null, null);
 insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (15, '249-124-5634', 'shoopthecoopw@coolmail.com', 'Shoop', '865 Ironwood', 'Plainwill', 'MI', '49080');
 insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (16, null, null, 'Laszio', null, null, null, null);
+insert into Customer (CustomerID, PhoneNumber, Email, LastName, StreetAddress, City, StateProvidence, PostalCode) values (17, '249-425-934', null, 'Tuberson', '237 Oakmont', 'Plaiwill Township', 'MI', '49081');
 
 
 insert into Coupon (CouponID, CouponName, CouponDescription, PercentDiscount, ExpirationDate) values (1, '15P', '15% off order', 15, '2022-03-31');
