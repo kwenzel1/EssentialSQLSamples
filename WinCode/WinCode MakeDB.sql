@@ -299,7 +299,9 @@ VALUES
     ('History', 'Spring', 'Social Studies', 'Emily Wilson', 3),
     ('Art', 'Spring', 'Fine Arts', 'Laura Anderson', 2),
     ('Drafting', 'Spring', 'Fine Arts', 'David Miller', 3),
-    ('Music', 'Spring', 'Fine Arts', 'Robert Taylor', 2);
+    ('Music', 'Spring', 'Fine Arts', 'Robert Taylor', 2),
+    ('Weaving', 'Spring', 'Fine Arts', 'Robert Taylor', 2),
+    ('Earth Science', 'Fall', 'Science', 'Tera Planut', 2);  
 
 -- Create Student table
 CREATE TABLE Schedule (
