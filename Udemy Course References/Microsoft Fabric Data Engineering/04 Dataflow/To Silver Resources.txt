@@ -1,0 +1,65 @@
+Hi,
+
+Here you'll find reference to help you build the data flow.  I added links to the various functions I used to create the expressions.
+I would recommend reviewing those, as you find the more you know about power query-m expressions, the more you can do!
+
+I also include the expression I used to create the custom column, in case you want to copy and paste them.
+
+And finally, though it isn't necessary if you're following along, I added the advance editor code.  This may come in handy in case you have to
+troubleshoot between your version of the data flow and mine.
+
+
+Useful Links:
+https://learn.microsoft.com/en-us/powerquery-m/power-query-m-function-reference
+https://learn.microsoft.com/en-us/powerquery-m/datetimezone-toutc
+https://learn.microsoft.com/en-us/powerquery-m/datetimezone-totext
+https://learn.microsoft.com/en-us/powerquery-m/m-spec-conditionals
+
+
+
+Custom Column Expressions:
+SalesDate:  DateTimeZone.ToText(DateTimeZone.ToUtc([SalesDateDtz]),[Format = "yyyyMMdd"])
+SalesTime:  DateTimeZone.ToText(DateTimeZone.ToUtc([SalesDateDtz]), [Format = "hhmm"])
+Condition:  if ([ConditionBad] ?? 0) <= 5 then ([ConditionBad] ?? 0) else [ConditionBad] / 10
+
+
+Advanced Editor Code:
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your id"]}[Data]{[lakehouseId = "replace with your id"]}[Data],
+  #"Navigation 1" = Source{[Id = "car_prices", ItemKind = "Table"]}[Data],
+  #"Renamed columns" = Table.RenameColumns(#"Navigation 1", {{"year", "Year"}, {"make", "Make"}, {"model", "ModelYear"}, {"trim", "Trim"}, {"body", "Body"}, {"transmission", "Transmission"}, {"vin", "Vin"}, {"state", "State"}, {"condition", "Condition"}, {"odometer", "Miles"}, {"color", "BodyColor"}, {"interior", "InteriorColor"}, {"seller", "Seller"}, {"mmr", "ManheimMarketReportValue"}, {"sellingprice", "SellingPrice"}, {"saledate", "SalesDate"}}),
+  #"Filtered rows" = Table.SelectRows(#"Renamed columns", each not Text.StartsWith([BodyColor], "1") 
+and not Text.StartsWith([BodyColor], "2")
+and not Text.StartsWith([BodyColor], "3") 
+and not Text.StartsWith([BodyColor], "4")
+and not Text.StartsWith([BodyColor], "5")
+and not Text.StartsWith([BodyColor], "6")
+and not Text.StartsWith([BodyColor], "7")
+and not Text.StartsWith([BodyColor], "8")
+and not Text.StartsWith([BodyColor], "9")
+and not Text.StartsWith([BodyColor], "0")
+),
+  #"Extracted text after delimiter" = Table.TransformColumns(#"Filtered rows", {{"SalesDate", each Text.AfterDelimiter(_, " ", 0), type text}}),
+  #"Extracted text before delimiter" = Table.TransformColumns(#"Extracted text after delimiter", {{"SalesDate", each Text.BeforeDelimiter(_, " ", {0, RelativePosition.FromEnd}), type text}}),
+  #"Replaced value" = Table.ReplaceValue(#"Extracted text before delimiter", "GMT", "", Replacer.ReplaceText, {"SalesDate"}),
+  #"Changed column type" = Table.TransformColumnTypes(#"Replaced value", {{"SalesDate", type datetimezone}}),
+  #"Renamed columns 1" = Table.RenameColumns(#"Changed column type", {{"SalesDate", "SalesDateDtz"}}),
+  #"Added custom" = Table.TransformColumnTypes(Table.AddColumn(#"Renamed columns 1", "SalesDate", each DateTimeZone.ToText(DateTimeZone.ToUtc([SalesDateDtz]),[Format = "yyyyMMdd"])), {{"SalesDate", Int64.Type}}),
+  #"Added custom 1" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom", "SalesTime", each DateTimeZone.ToText(DateTimeZone.ToUtc([SalesDateDtz]), [Format = "hhmm"])), {{"SalesTime", type text}}),
+  #"Removed columns" = Table.RemoveColumns(#"Added custom 1", {"SalesDateDtz"}),
+  #"Reordered columns" = Table.ReorderColumns(#"Removed columns", {"Year", "Make", "ModelYear", "Trim", "Body", "Transmission", "Vin", "State", "Condition", "Miles", "BodyColor", "InteriorColor", "Seller", "ManheimMarketReportValue", "SellingPrice", "SalesDate", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Renamed columns 2" = Table.RenameColumns(#"Reordered columns", {{"Condition", "ConditionBad"}}),
+  #"Added custom 2" = Table.AddColumn(#"Renamed columns 2", "Condition", each if ([ConditionBad] ?? 0) <= 5 then ([ConditionBad] ?? 0) else [ConditionBad] / 10),
+  #"Changed column type 1" = Table.TransformColumnTypes(#"Added custom 2", {{"Condition", type number}}),
+  #"Reordered columns 1" = Table.ReorderColumns(#"Changed column type 1", {"Year", "Make", "ModelYear", "Trim", "Body", "Transmission", "Vin", "State", "ConditionBad", "Condition", "Miles", "BodyColor", "InteriorColor", "Seller", "ManheimMarketReportValue", "SellingPrice", "SalesDate", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Removed columns 1" = Table.RemoveColumns(#"Reordered columns 1", {"ConditionBad"}),
+  #"Capitalized each word" = Table.TransformColumns(#"Removed columns 1", {{"Body", each Text.Proper(_), type nullable text}}),
+  #"Capitalized each word 1" = Table.TransformColumns(#"Capitalized each word", {{"Transmission", each Text.Proper(_), type nullable text}}),
+  #"Uppercased text" = Table.TransformColumns(#"Capitalized each word 1", {{"State", each Text.Upper(_), type nullable text}}),
+  #"Capitalized each word 2" = Table.TransformColumns(#"Uppercased text", {{"BodyColor", each Text.Proper(_), type nullable text}, {"InteriorColor", each Text.Proper(_), type nullable text}, {"Seller", each Text.Proper(_), type nullable text}}),
+  #"Replaced value 1" = Table.ReplaceValue(#"Capitalized each word 2", "—", "Unknown", Replacer.ReplaceText, {"BodyColor", "InteriorColor"}),
+  #"Replaced value 2" = Table.ReplaceValue(#"Replaced value 1", null, "Unknown", Replacer.ReplaceValue, {"Make", "ModelYear", "Trim", "Body", "Transmission", "Vin", "State", "BodyColor", "InteriorColor", "Seller"}),
+  #"Renamed columns 3" = Table.RenameColumns(#"Replaced value 2", {{"ModelYear", "Model"}, {"Year", "ModelYear"}}),
+  #"Capitalized each word 3" = Table.TransformColumns(#"Renamed columns 3", {{"Make", each Text.Proper(_), type nullable text}, {"Model", each Text.Proper(_), type nullable text}, {"Trim", each Text.Proper(_), type nullable text}, {"Body", each Text.Proper(_), type nullable text}, {"Transmission", each Text.Proper(_), type nullable text}, {"Vin", each Text.Proper(_), type nullable text}, {"State", each Text.Proper(_), type nullable text}, {"BodyColor", each Text.Proper(_), type nullable text}, {"InteriorColor", each Text.Proper(_), type nullable text}, {"Seller", each Text.Proper(_), type nullable text}})
+in
+  #"Capitalized each word 3"

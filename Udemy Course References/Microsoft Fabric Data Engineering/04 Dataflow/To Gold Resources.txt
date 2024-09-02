@@ -1,0 +1,134 @@
+Hi,
+
+Here you'll find reference to help you build the data flow.  I added links to the various functions I used to create the expressions.
+I would recommend reviewing those, as you find the more you know about power query-m expressions, the more you can do!
+
+I also include the expression I used to create the custom column, in case you want to copy and paste them.
+
+And finally, though it isn't necessary if you're following along, I added the advance editor code.  This may come in handy in case you have to
+troubleshoot between your version of the data flow and mine.
+
+
+Useful Links:
+https://learn.microsoft.com/en-us/powerquery-m/power-query-m-function-reference
+https://learn.microsoft.com/en-us/powerquery-m/text-from
+https://learn.microsoft.com/en-us/powerquery-m/date-totext
+https://learn.microsoft.com/en-us/powerquery-m/m-spec-conditionals
+https://learn.microsoft.com/en-us/powerquery-m/operators
+
+
+
+
+Custom Column Expressions:
+DateDimension--
+YearQuarter - Text.From([Year]) & "Q" & Text.From([Quarter])
+yyyyMMdd - Date.ToText([FullDate], [Format = "yyyyMMdd"])
+
+CarSalesFact--
+SoldOverMarketValue - if [SellingPrice] > [ManheimMarketReportValue] then 1 else 0
+PercentDifference - ([SellingPrice] - [ManheimMarketReportValue]) / [ManheimMarketReportValue]
+
+
+Advanced Editor Code
+Model--
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your ID"]}[Data]{[lakehouseId = "replace with your ID"]}[Data],
+  #"Navigation 1" = Source{[Id = "CarPrices", ItemKind = "Table"]}[Data],
+  #"Removed other columns" = Table.SelectColumns(#"Navigation 1", {"Make", "Model", "Trim", "Body"}),
+  #"Removed duplicates" = Table.Distinct(#"Removed other columns", {"Make", "Model", "Trim", "Body"}),
+  #"Added index" = Table.AddIndexColumn(#"Removed duplicates", "Index", 1, 1, Int64.Type),
+  #"Renamed columns" = Table.RenameColumns(#"Added index", {{"Index", "ModelID"}}),
+  #"Reordered columns" = Table.ReorderColumns(#"Renamed columns", {"ModelID", "Make", "Model", "Trim", "Body"})
+in
+  #"Reordered columns"
+
+Seller--
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your ID"]}[Data]{[lakehouseId = "replace with your ID"]}[Data],
+  #"Navigation 1" = Source{[Id = "CarPrices", ItemKind = "Table"]}[Data],
+  #"Removed other columns" = Table.SelectColumns(#"Navigation 1", {"Seller"}),
+  #"Removed duplicates" = Table.Distinct(#"Removed other columns", {"Seller"}),
+  #"Added index" = Table.AddIndexColumn(#"Removed duplicates", "Index", 1, 1, Int64.Type),
+  #"Renamed columns" = Table.RenameColumns(#"Added index", {{"Index", "SellerID"}}),
+  #"Reordered columns" = Table.ReorderColumns(#"Renamed columns", {"SellerID", "Seller"})
+in
+  #"Reordered columns"
+
+Color--
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your ID"]}[Data]{[lakehouseId = "replace with your ID"]}[Data],
+  #"Navigation 1" = Source{[Id = "CarPrices", ItemKind = "Table"]}[Data],
+  #"Removed other columns" = Table.SelectColumns(#"Navigation 1", {"BodyColor", "InteriorColor"}),
+  #"Removed duplicates" = Table.Distinct(#"Removed other columns", {"InteriorColor", "BodyColor"}),
+  #"Added index" = Table.AddIndexColumn(#"Removed duplicates", "Index", 1, 1, Int64.Type),
+  #"Renamed columns" = Table.RenameColumns(#"Added index", {{"Index", "ColorID"}}),
+  #"Reordered columns" = Table.ReorderColumns(#"Renamed columns", {"ColorID", "BodyColor", "InteriorColor"})
+in
+  #"Reordered columns"
+
+--TransmissionType
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your ID"]}[Data]{[lakehouseId = "replace with your ID"]}[Data],
+  #"Navigation 1" = Source{[Id = "CarPrices", ItemKind = "Table"]}[Data],
+  #"Removed other columns" = Table.SelectColumns(#"Navigation 1", {"Transmission"}),
+  #"Removed duplicates" = Table.Distinct(#"Removed other columns", {"Transmission"}),
+  #"Added index" = Table.AddIndexColumn(#"Removed duplicates", "Index", 1, 1, Int64.Type),
+  #"Renamed columns" = Table.RenameColumns(#"Added index", {{"Index", "TransmissionTypeID"}}),
+  #"Reordered columns" = Table.ReorderColumns(#"Renamed columns", {"TransmissionTypeID", "Transmission"})
+in
+  #"Reordered columns"
+
+--Date Dimension
+let
+    // Define the start and end dates
+    StartDate = #date(2010, 1, 1),
+    EndDate = #date(2020, 12, 31),
+    
+    // Generate the list of dates
+    DateList = List.Dates(StartDate, Duration.Days(EndDate - StartDate), #duration(1, 0, 0, 0) ),
+  #"Converted to table" = Table.FromList(DateList, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+  #"Renamed columns" = Table.RenameColumns(#"Converted to table", {{"Column1", "FullDate"}}),
+  #"Changed column type" = Table.TransformColumnTypes(#"Renamed columns", {{"FullDate", type date}}),
+  #"Added custom" = Table.TransformColumnTypes(Table.AddColumn(#"Changed column type", "Year", each Date.Year([FullDate])), {{"Year", Int64.Type}}),
+  #"Added custom 1" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom", "Month", each Date.Month([FullDate])), {{"Month", Int64.Type}}),
+  #"Added custom 2" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 1", "Day", each Date.Day([FullDate])), {{"Day", Int64.Type}}),
+  #"Added custom 3" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 2", "MonthName", each Date.MonthName([FullDate])), {{"MonthName", type text}}),
+  #"Added custom 4" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 3", "DayOfWeek", each Date.DayOfWeek([FullDate])), {{"DayOfWeek", Int64.Type}}),
+  #"Added custom 5" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 4", "DayOfWeekName", each Date.DayOfWeekName([FullDate])), {{"DayOfWeekName", type text}}),
+  #"Added custom 6" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 5", "WeekOfYear", each Date.WeekOfYear([FullDate])), {{"WeekOfYear", Int64.Type}}),
+  #"Added custom 7" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 6", "Quarter", each Date.QuarterOfYear([FullDate])), {{"Quarter", Int64.Type}}),
+  #"Added custom 8" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 7", "YearQuarter", each Text.From([Year]) & "Q" & Text.From([Quarter])), {{"YearQuarter", type text}}),
+  #"Inserted year" = Table.AddColumn(#"Added custom 8", "Year (2)", each Date.Year([FullDate]), type nullable number),
+  #"Removed columns" = Table.RemoveColumns(#"Inserted year", {"Year (2)"}),
+  #"Added custom 9" = Table.TransformColumnTypes(Table.AddColumn(#"Removed columns", "YYYYMMDD", each Date.ToText([FullDate], [Format = "yyyyMMdd"])), {{"YYYYMMDD", Int64.Type}}),
+  #"Reordered columns" = Table.ReorderColumns(#"Added custom 9", {"YYYYMMDD", "FullDate", "Year", "Month", "Day", "MonthName", "DayOfWeek", "DayOfWeekName", "WeekOfYear", "Quarter", "YearQuarter"})
+in
+    #"Reordered columns"
+
+--CarSalesFact
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your ID"]}[Data]{[lakehouseId = "replace with your ID"]}[Data],
+  #"Navigation 1" = Source{[Id = "CarPrices", ItemKind = "Table"]}[Data],
+  #"Merged queries" = Table.NestedJoin(#"Navigation 1", {"Make", "Model", "Trim", "Body"}, Model, {"Make", "Model", "Trim", "Body"}, "Model (2)", JoinKind.LeftOuter),
+  #"Expanded Model (2)" = Table.ExpandTableColumn(#"Merged queries", "Model (2)", {"ModelID"}, {"ModelID"}),
+  #"Reordered columns" = Table.ReorderColumns(#"Expanded Model (2)", {"ModelYear", "ModelID", "Make", "Model", "Trim", "Body", "Transmission", "Vin", "State", "Condition", "Miles", "BodyColor", "InteriorColor", "Seller", "ManheimMarketReportValue", "SellingPrice", "SalesDate", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Removed columns" = Table.RemoveColumns(#"Reordered columns", {"Make", "Model", "Trim", "Body"}),
+  #"Merged queries 1" = Table.NestedJoin(#"Removed columns", {"Seller"}, Seller, {"Seller"}, "Seller (2)", JoinKind.LeftOuter),
+  #"Expanded Seller (2)" = Table.ExpandTableColumn(#"Merged queries 1", "Seller (2)", {"SellerID"}, {"SellerID"}),
+  #"Reordered columns 1" = Table.ReorderColumns(#"Expanded Seller (2)", {"ModelYear", "ModelID", "SellerID", "Transmission", "Vin", "State", "Condition", "Miles", "BodyColor", "InteriorColor", "Seller", "ManheimMarketReportValue", "SellingPrice", "SalesDate", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Removed columns 1" = Table.RemoveColumns(#"Reordered columns 1", {"Seller"}),
+  #"Merged queries 2" = Table.NestedJoin(#"Removed columns 1", {"BodyColor", "InteriorColor"}, Color, {"BodyColor", "InteriorColor"}, "Color", JoinKind.LeftOuter),
+  #"Expanded Color" = Table.ExpandTableColumn(#"Merged queries 2", "Color", {"ColorID"}, {"ColorID"}),
+  #"Reordered columns 2" = Table.ReorderColumns(#"Expanded Color", {"ModelYear", "ModelID", "SellerID", "ColorID", "Transmission", "Vin", "State", "Condition", "Miles", "BodyColor", "InteriorColor", "ManheimMarketReportValue", "SellingPrice", "SalesDate", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Removed columns 2" = Table.RemoveColumns(#"Reordered columns 2", {"BodyColor", "InteriorColor"}),
+  #"Merged queries 3" = Table.NestedJoin(#"Removed columns 2", {"Transmission"}, TransmissionType, {"Transmission"}, "TransmissionType", JoinKind.LeftOuter),
+  #"Expanded TransmissionType" = Table.ExpandTableColumn(#"Merged queries 3", "TransmissionType", {"TransmissionTypeID"}, {"TransmissionTypeID"}),
+  #"Reordered columns 3" = Table.ReorderColumns(#"Expanded TransmissionType", {"ModelYear", "ModelID", "SellerID", "ColorID", "TransmissionTypeID", "Transmission", "Vin", "State", "Condition", "Miles", "ManheimMarketReportValue", "SellingPrice", "SalesDate", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Removed columns 3" = Table.RemoveColumns(#"Reordered columns 3", {"Transmission", "SalesTime", "Index", "LakeLoadDate"}),
+  #"Filtered rows" = Table.SelectRows(#"Removed columns 3", each [SellingPrice] <> null),
+  #"Filtered rows 1" = Table.SelectRows(#"Filtered rows", each [ManheimMarketReportValue] <> null),
+  #"Added custom" = Table.TransformColumnTypes(Table.AddColumn(#"Filtered rows 1", "SoldOverMarketValue", each if [SellingPrice] > [ManheimMarketReportValue] then 1 else 0), {{"SoldOverMarketValue", Int64.Type}}),
+  #"Added custom 1" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom", "AbsoluteDifference", each [SellingPrice] - [ManheimMarketReportValue]), {{"AbsoluteDifference", Int64.Type}}),
+  #"Added custom 2" = Table.TransformColumnTypes(Table.AddColumn(#"Added custom 1", "PercentDifference", each ([SellingPrice] - [ManheimMarketReportValue]) / [ManheimMarketReportValue]), {{"PercentDifference", Percentage.Type}})
+in
+  #"Added custom 2"

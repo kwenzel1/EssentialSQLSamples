@@ -1,10 +1,22 @@
-This page contains useful information to create columns using expressions:
+Hi,
+
+Here you'll find reference to help you build the data flow.  I added links to the various functions I used to create the expressions.
+I would recommend reviewing those, as you find the more you know about power query-m expressions, the more you can do!
+
+I also include the expression I used to create the custom column, in case you want to copy and paste them.
+
+And finally, though it isn't necessary if you're following along, I added the advance editor code.  This may come in handy in case you have to
+troubleshoot between your version of the data flow and mine.
+
+Useful Links:
 https://learn.microsoft.com/en-us/powerquery-m/power-query-m-function-reference
 
 
-Here is the expression to create the LakeLoadDate:  DateTime.FixedLocalNow()
+Custom Column Expressions:
+LakeLoadDate - DateTime.FixedLocalNow()
 
-Here is the code from the advanced editor.
+
+Advanced Editor Code:
 let
   Source = Lakehouse.Contents(null){[workspaceId = "replace with your id"]}[Data]{[lakehouseId = "replace with your id"]}[Data],
   #"Navigation 1" = Source{[Id = "car_prices", ItemKind = "Table"]}[Data],
