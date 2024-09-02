@@ -1,0 +1,14 @@
+This page contains useful information to create columns using expressions:
+https://learn.microsoft.com/en-us/powerquery-m/power-query-m-function-reference
+
+
+Here is the expression to create the LakeLoadDate:  DateTime.FixedLocalNow()
+
+Here is the code from the advanced editor.
+let
+  Source = Lakehouse.Contents(null){[workspaceId = "replace with your id"]}[Data]{[lakehouseId = "replace with your id"]}[Data],
+  #"Navigation 1" = Source{[Id = "car_prices", ItemKind = "Table"]}[Data],
+  #"Added index" = Table.AddIndexColumn(#"Navigation 1", "Index", 1, 1, Int64.Type),
+  #"Added custom" = Table.TransformColumnTypes(Table.AddColumn(#"Added index", "LakeLoadDate", each DateTime.FixedLocalNow()), {{"LakeLoadDate", type datetime}})
+in
+  #"Added custom"
