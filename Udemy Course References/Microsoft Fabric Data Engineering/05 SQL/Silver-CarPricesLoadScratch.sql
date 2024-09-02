@@ -1,7 +1,12 @@
+--This is the commands you can use to create the Silver and Gold schemas.
+
+--https://learn.microsoft.com/en-us/sql/t-sql/statements/create-schema-transact-sql?view=sql-server-ver16
+create schema Silver;
+create schema Gold;
+
 --This is the script is use to get a sense of the data.
 Select top 100 *
 from BronzeLayer.dbo.car_prices
-
 
 --Here I rename the columns.  I normally don't do this as a separate step,
 --but did so for you so help show you some of the thinking.
